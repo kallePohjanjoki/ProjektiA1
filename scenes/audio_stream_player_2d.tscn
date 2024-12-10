@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://b2a3dwghdf43j"]
+
+[ext_resource type="AudioStream" uid="uid://bshwq5rea6kxc" path="res://Metsänhaltija3.mp3" id="1_ohrre"]
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D"]
+stream = ExtResource("1_ohrre")
+autoplay = true

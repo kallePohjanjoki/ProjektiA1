@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3 uid="uid://ckt71i2i2h7be"]
+
+[ext_resource type="Texture2D" uid="uid://cdas858tlmfga" path="res://8.png" id="1_hy3e6"]
+
+[node name="Stump" type="Area2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+scale = Vector2(6, 6)
+texture = ExtResource("1_hy3e6")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+position = Vector2(-14, -20)
+scale = Vector2(4, 4)
+polygon = PackedVector2Array(11.75, -9.5, 2.25, -11.75, -4, -9.5, -5.5, -7.5, -4.75, 5.5, 0, 5.75, 0.5, 20.75, 7, 20.75, 7.25, 5.75, 12, 5.75)
