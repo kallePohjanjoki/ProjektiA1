@@ -2,7 +2,7 @@ extends Node
 
 #preload obstacles
 var stump_scene = preload("res://scenes/stump.tscn")
-var rock_scene = preload("res://scenes/rock_.tscn")
+var rock_scene = preload("res://scenes/stump.tscn")
 var barrel_scene = preload("res://scenes/barrel.tscn")
 var bird_scene = preload("res://scenes/bird.tscn")
 var obstacle_types := [stump_scene, rock_scene, barrel_scene]
@@ -16,7 +16,9 @@ var difficulty
 const MAX_DIFFICULTY : int = 2
 var score : int
 const SCORE_MODIFIER : int = 10
-var high_score: int
+var high_score : int
+const HIGH_SCORE_FILE := "user://high_score.txt"
+
 var speed : float
 const START_SPEED : float = 10.0
 const MAX_SPEED : int = 25
@@ -27,6 +29,7 @@ var game_running : bool
 var last_obs
 
 # Called when the node enters the scene tree for the first time.
+
 func _ready():
 	screen_size = get_window().size
 	ground_height = $Ground.get_node("Sprite2D").texture.get_height()
@@ -39,13 +42,12 @@ func new_game():
 	show_score()
 	game_running = false
 	get_tree().paused = false
-	difficulty = 0 
+	difficulty = 0
 	
 	#delete all obstacles
 	for obs in obstacles:
 		obs.queue_free()
 	obstacles.clear()
-	
 	
 	#reset the nodes
 	$Dino.position = DINO_START_POS
@@ -56,10 +58,10 @@ func new_game():
 	#reset hud and game over screen
 	$HUD.get_node("StartLabel").show()
 	$GameOver.hide()
-	
-	
+
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta):
+func _process(delta):
 	if game_running:
 		#speed up and adjust difficulty
 		speed = START_SPEED + score / SPEED_MODIFIER
@@ -70,33 +72,30 @@ func _process(_delta):
 		#generate obstacles
 		generate_obs()
 		
+		#move dino and camera
+		$Dino.position.x += speed
+		$Camera2D.position.x += speed
 		
-	#move dino and camera
-	$Dino.position.x += speed
-	$Camera2D.position.x += speed
-	
-	
-	#update score
-	score += speed
-	show_score()
-	
-	#update ground position
-	if $Camera2D.position.x - $Ground.position.x > screen_size.x * 1.5:
-		$Ground.position.x += screen_size.x
+		#update score
+		score += speed
+		show_score()
 		
+		#update ground position
+		if $Camera2D.position.x - $Ground.position.x > screen_size.x * 1.5:
+			$Ground.position.x += screen_size.x
+			
 		#remove obstacles that have gone off screen
 		for obs in obstacles:
 			if obs.position.x < ($Camera2D.position.x - screen_size.x):
 				remove_obs(obs)
-	
 	else:
-		if Input.is_action_just_pressed("ui_accept"):
+		if Input.is_action_pressed("ui_accept"):
 			game_running = true
 			$HUD.get_node("StartLabel").hide()
 
 func generate_obs():
 	#generate ground obstacles
-	if obstacles.is_empty() or last_obs.position.x < score + randi_range(300, 500) :
+	if obstacles.is_empty() or last_obs.position.x < score + randi_range(300, 500):
 		var obs_type = obstacle_types[randi() % obstacle_types.size()]
 		var obs
 		var max_obs = difficulty + 1
@@ -108,7 +107,7 @@ func generate_obs():
 			var obs_y : int = screen_size.y - ground_height - (obs_height * obs_scale.y / 2) + 5
 			last_obs = obs
 			add_obs(obs, obs_x, obs_y)
-		#additionally random change to spawn a bird
+		#additionally random chance to spawn a bird
 		if difficulty == MAX_DIFFICULTY:
 			if (randi() % 2) == 0:
 				#generate bird obstacles
@@ -116,12 +115,13 @@ func generate_obs():
 				var obs_x : int = screen_size.x + score + 100
 				var obs_y : int = bird_heights[randi() % bird_heights.size()]
 				add_obs(obs, obs_x, obs_y)
+
 func add_obs(obs, x, y):
-		obs.position = Vector2i(x, y)
-		obs.body_entered.connect(hit_obs)
-		add_child(obs)
-		obstacles.append(obs)
-		
+	obs.position = Vector2i(x, y)
+	obs.body_entered.connect(hit_obs)
+	add_child(obs)
+	obstacles.append(obs)
+
 func remove_obs(obs):
 	obs.queue_free()
 	obstacles.erase(obs)
@@ -129,7 +129,7 @@ func remove_obs(obs):
 func hit_obs(body):
 	if body.name == "Dino":
 		game_over()
-	
+
 func show_score():
 	$HUD.get_node("ScoreLabel").text = "SCORE: " + str(score / SCORE_MODIFIER)
 
@@ -137,7 +137,23 @@ func check_high_score():
 	if score > high_score:
 		high_score = score
 		$HUD.get_node("HighScoreLabel").text = "HIGH SCORE: " + str(high_score / SCORE_MODIFIER)
+		save_high_score()  # Save the new high score
 
+func save_high_score():
+	var file = FileAccess.open(HIGH_SCORE_FILE, FileAccess.WRITE)
+	if file:
+		file.store_line(str(high_score))
+		file.close()
+
+# Load the high score using FileAccess
+func load_high_score():
+	if FileAccess.file_exists(HIGH_SCORE_FILE):
+		var file = FileAccess.open(HIGH_SCORE_FILE, FileAccess.READ)
+		if file:
+			high_score = int(file.get_line())  # Read and parse the high score
+			file.close()
+	else:
+		high_score = 0  # Default high score if file doesn't exist
 func adjust_difficulty():
 	difficulty = score / SPEED_MODIFIER
 	if difficulty > MAX_DIFFICULTY:
@@ -148,5 +164,3 @@ func game_over():
 	get_tree().paused = true
 	game_running = false
 	$GameOver.show()
-	
-	

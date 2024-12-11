@@ -9,6 +9,7 @@ size = Vector2(2304, 96)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture_filter = 1
+texture_repeat = 2
 position = Vector2(0, 552)
 texture = ExtResource("1_0j0v3")
 centered = false
